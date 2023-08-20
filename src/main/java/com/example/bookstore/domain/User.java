@@ -24,8 +24,13 @@ public class User implements UserDetails {
     @Generated
     private String id;
 
+    public String getId() {
+        return id;
+    }
+
     @NonNull
     @Field
+
     private String email;
 
     @NonNull
@@ -48,10 +53,17 @@ public class User implements UserDetails {
     @Field
     private String lastName;
 
-    @DBRef
-    @Field
-    private List<Order> orders = new ArrayList<>();
+//    @DBRef
+//    @Field
+//    private List<Order> orders = new ArrayList<>();
 
+//    @DBRef
+//    @Field
+//    private ShoppingCart shoppingCart = new ShoppingCart();
+
+//    public ShoppingCart getShoppingCart() {
+//        return shoppingCart;
+//    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

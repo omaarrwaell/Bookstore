@@ -2,6 +2,7 @@ package com.example.bookstore.security;
 
 import com.example.bookstore.domain.User;
 import com.example.bookstore.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +18,7 @@ public class UserDetailsServiceImpl  implements UserDetailsService {
 
     UserRepository userRepository;
 
+    @Autowired
     public UserDetailsServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }

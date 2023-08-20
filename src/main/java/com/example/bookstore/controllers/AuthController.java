@@ -1,7 +1,9 @@
 package com.example.bookstore.controllers;
 
+import com.example.bookstore.config.JwtTokenUtil;
 import com.example.bookstore.domain.LoginDto;
 import com.example.bookstore.domain.User;
+import com.example.bookstore.security.UserDetailsServiceImpl;
 import com.example.bookstore.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,19 +12,28 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.List;
+
+import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
 
 @RestController
 public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
     private UserService userService;
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+    @Autowired
     public AuthController(UserService userService) {
         this.userService = userService;
     }
@@ -54,13 +65,22 @@ public class AuthController {
 //        return ResponseEntity.ok("Provide login credentials using a POST request.");
 //}
 
-@PostMapping("/login")
+    @PostMapping("/login")
     public ResponseEntity<String> login(@Validated @RequestBody LoginDto form, BindingResult bindingResult,
                       HttpServletRequest request){
-    Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
-            (form.getUsernameOrEmail(), form.getPassword()));
+
+
+    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(form.getUsernameOrEmail(), form.getPassword());
+    Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
     SecurityContextHolder.getContext().setAuthentication(authentication);
-    return new ResponseEntity<>("User signed-in successfully", HttpStatus.OK);
+        HttpSession session = request.getSession(true);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(form.getUsernameOrEmail());
+
+
+        final String token = jwtTokenUtil.generateToken(userDetails);
+
+        session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+    return new ResponseEntity<>(token.toString(), HttpStatus.OK);
 }
 
 

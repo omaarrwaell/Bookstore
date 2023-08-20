@@ -24,4 +24,10 @@ public class OrderItem {
     @Field
     @DBRef
     private Book bookId;
+
+    public OrderItem(String name, double price, Book bookId) {
+        this.bookId=bookId;
+        this.price=price;
+        this.bookName=name;
+    }
 }

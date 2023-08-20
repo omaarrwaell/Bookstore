@@ -29,9 +29,18 @@ public class Book {
     @Field
     private double price;
     @Field
-    private Date pub_date;
+    private Date pubDate;
+//    @Field
+//    @DBRef
+//    private List<Review> reviews =new ArrayList<>();
     @Field
-    @DBRef
-    private List<Review> reviews =new ArrayList<>();
+    private String imageUrl ;
 
+    public void setTitle(String title) {
+        this.name=title;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageUrl=imageURL;
+    }
 }

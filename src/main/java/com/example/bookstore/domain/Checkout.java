@@ -1,9 +1,6 @@
 package com.example.bookstore.domain;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -12,40 +9,37 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
 @Document
-public class ShoppingCart {
+@Getter
 
-
+@RequiredArgsConstructor
+public class Checkout {
     @Id
+    @Generated
     private String id;
-
-
     @DBRef
     @Field
-    private List<Book> books = new ArrayList<>();
-
-    @Field
-    private double total;
-
-    @DBRef
     private User userId;
+
+    @DBRef
+    @Field
+    @NonNull
+    private List<OrderItem> books = new ArrayList<>();
+    @Field
+    private double total=0;
 
     public double getTotal() {
         double total=0;
-        for ( Book book:books
-             ) {
+        for ( OrderItem book:books
+        ) {
             total+=book.getPrice();
 
         }
         return total;
     }
+
+    public Checkout(User user, List<OrderItem> orderItems) {
+        this.userId=user;
+        this.books=orderItems;
+    }
 }
-
-
-
-
-
