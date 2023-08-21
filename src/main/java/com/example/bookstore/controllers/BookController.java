@@ -49,7 +49,7 @@ public class BookController {
     }
 
     @GetMapping("/books")
-    public Page<Book> getBooks(@RequestParam int pageNo,@RequestParam int size,@RequestParam(required = false) String sortBy)
+    public Page<Book> getBooks(@RequestParam int pageNo,@RequestParam int size,@RequestParam(value="sortBy", required = false) String sortBy)
     {
         Pageable page = PageRequest.of(pageNo,size, Sort.by(sortBy).descending());
         return bookService.findAllByPage(page);

@@ -1,5 +1,6 @@
 package com.example.bookstore.domain;
 
+import com.example.bookstore.domain.validator.PasswordsMatch;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -18,6 +19,7 @@ import java.util.*;
 @Setter
 @ToString
 @Document
+@PasswordsMatch
 public class User implements UserDetails {
     @Id
     //@Indexed(unique = true)

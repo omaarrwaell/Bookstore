@@ -51,4 +51,9 @@ public Optional<User> getLoggedInUser(String authorization) {
 public Optional<User> getUser(String username){
         return userRepository.findByEmail(username);
 }
+
+    public User getUserById(String id){
+        return userRepository.findById(id).get();
+    }
+
 }

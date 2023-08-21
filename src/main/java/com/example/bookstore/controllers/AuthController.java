@@ -4,6 +4,7 @@ import com.example.bookstore.config.JwtTokenUtil;
 import com.example.bookstore.domain.LoginDto;
 import com.example.bookstore.domain.User;
 import com.example.bookstore.security.UserDetailsServiceImpl;
+import com.example.bookstore.services.MailService;
 import com.example.bookstore.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.annotation.Validated;
@@ -33,6 +35,8 @@ public class AuthController {
     private UserDetailsServiceImpl userDetailsService;
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private MailService mailService;
     @Autowired
     public AuthController(UserService userService) {
         this.userService = userService;
@@ -80,7 +84,20 @@ public class AuthController {
         final String token = jwtTokenUtil.generateToken(userDetails);
 
         session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+        mailService.sendWelcomeEmail(userDetails);
+
     return new ResponseEntity<>(token.toString(), HttpStatus.OK);
+}
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request,Authentication authentication){
+    if (authentication != null) {
+        new SecurityContextLogoutHandler().logout(request, null, authentication);
+        return new ResponseEntity<>("Logged out successfully", HttpStatus.OK);
+    } else {
+        return new ResponseEntity<>("No authenticated user", HttpStatus.BAD_REQUEST);
+    }
+
 }
 
 

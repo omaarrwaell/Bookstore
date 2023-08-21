@@ -5,6 +5,7 @@ import com.example.bookstore.domain.CheckoutDto;
 import com.example.bookstore.domain.Order;
 import com.example.bookstore.domain.User;
 import com.example.bookstore.services.CheckoutService;
+import com.example.bookstore.services.MailService;
 import com.example.bookstore.services.OrderService;
 import com.example.bookstore.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,8 @@ public class CheckoutController {
     private CheckoutService checkoutService;
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private  MailService mailService;
 
     @GetMapping("/checkout")
     public Checkout  getCheckout(@RequestHeader String Authorization){
@@ -40,6 +43,7 @@ public class CheckoutController {
         order.setPhoneNumber(checkoutDto.getPhoneNumber());
         order.setPlaced(true);
         orderService.save(order);
+        mailService.sendEmailFromTemplate(user, "email/welcome", "Your Order is confirmed");
         //user.getOrders().stream().filter(o->o.getId().);
       //  userService.save(user);
 
