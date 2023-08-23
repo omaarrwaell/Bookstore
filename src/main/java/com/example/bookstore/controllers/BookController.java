@@ -1,10 +1,7 @@
 package com.example.bookstore.controllers;
 
 import com.example.bookstore.domain.*;
-import com.example.bookstore.services.BookService;
-import com.example.bookstore.services.ReviewService;
-import com.example.bookstore.services.ShoppingCartService;
-import com.example.bookstore.services.UserService;
+import com.example.bookstore.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,12 +25,14 @@ public class BookController {
     private UserService userService;
     private final ShoppingCartService shoppingCartService;
     private ReviewService reviewService;
+    private BrowsingHistoryService browsingHistoryService;
     @Autowired
-    public BookController(BookService bookService, UserService userService, ShoppingCartService shoppingCartService,ReviewService reviewService) {
+    public BookController(BookService bookService, UserService userService, ShoppingCartService shoppingCartService,ReviewService reviewService,BrowsingHistoryService browsingHistoryService) {
         this.bookService = bookService;
         this.userService=userService;
         this.shoppingCartService = shoppingCartService;
         this.reviewService=reviewService;
+        this.browsingHistoryService=browsingHistoryService;
     }
 
     @PostMapping("admin/books/create")
@@ -52,15 +51,30 @@ public class BookController {
     public Page<Book> getBooks(@RequestParam int pageNo,@RequestParam int size,@RequestParam(value="sortBy", required = false) String sortBy)
     {
         Pageable page = PageRequest.of(pageNo,size, Sort.by(sortBy).descending());
-        return bookService.findAllByPage(page);
+        Page<Book> books =bookService.findAllByPage(page);
+
+        for(Book book : books.getContent()){
+            book.setRating(bookService.getRating(book));
+            bookService.save(book);
+        }
+        return books;
     }
 
     @GetMapping("/books/{name}")
-    public ResponseEntity<Book> getBook(@PathVariable String name) {
+    public ResponseEntity<Book> getBook(@PathVariable String name,@RequestHeader String Authorization) {
+        User currentUser =userService.getLoggedInUser(Authorization).get();
+        BrowsingHistory browsingHistory = browsingHistoryService.getBrowsingHistoryByUserId(currentUser);
+        if(browsingHistory == null){
+            browsingHistory = new BrowsingHistory();
+            browsingHistory.setUserId(currentUser);
+        }
         Optional<Book> book = bookService.findBookByName(name);
         if (book.get() == null) {
             return ResponseEntity.of(book);
         } else {
+            int count =browsingHistory.getCategoriesFrequency().get(book.get().getGenre());
+            browsingHistory.getCategoriesFrequency().put(book.get().getGenre(),++count);
+            browsingHistoryService.save(browsingHistory);
             return ResponseEntity.ok(book.get());
         }
     }

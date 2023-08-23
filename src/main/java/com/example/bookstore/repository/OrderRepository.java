@@ -16,7 +16,8 @@ public interface OrderRepository extends MongoRepository<Order,String> {
             "{$unwind: '$books'}",
             "{$group: {_id: '$books', count: {$sum: 1}}}",
             "{$sort: {count: -1}}",
-            "{$limit: 1}"
+
+//            "{$limit: 1}"
     })
     List<OrderItem> findMostCommonOrderItem();
 }

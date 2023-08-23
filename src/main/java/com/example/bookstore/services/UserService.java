@@ -56,4 +56,7 @@ public Optional<User> getUser(String username){
         return userRepository.findById(id).get();
     }
 
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
 }

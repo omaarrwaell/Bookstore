@@ -95,6 +95,18 @@ public class BookService {
     public Page<Book> findAllByPage(Pageable page){
         return bookRepository.findAll(page);
 
+
+    }
+    public List<BookDto> convertToBookDto(List<Book> books){
+        List<BookDto> bookDtos = new ArrayList<>();
+        for(Book book : books){
+            BookDto bookDto =new BookDto(book.getName(),book.getAuthor(),book.getPrice(),book.getImageUrl());
+            double rating = getRating(book);
+            bookDto.setAvgRating(rating);
+            bookDtos.add(bookDto);
+
+        }
+        return bookDtos;
     }
 
     public List<Book> getAutocompleteSuggestions(String query, String author, String category, Double minPrice, Double maxPrice, Date startDate, Date endDate) {
@@ -118,5 +130,9 @@ public class BookService {
        }
 
         return  suggestions;
+    }
+
+    public List<Book> getBooksByGenre(String category) {
+        return bookRepository.findBookByGenre(category);
     }
 }

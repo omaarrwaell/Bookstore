@@ -30,6 +30,10 @@ public class Book {
     private double price;
     @Field
     private Date pubDate;
+    @Field
+    private double rating;
+    @Field
+    private int quantity=5;
 //    @Field
 //    @DBRef
 //    private List<Review> reviews =new ArrayList<>();

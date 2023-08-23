@@ -1,13 +1,7 @@
 package com.example.bookstore.controllers;
 
-import com.example.bookstore.domain.Checkout;
-import com.example.bookstore.domain.CheckoutDto;
-import com.example.bookstore.domain.Order;
-import com.example.bookstore.domain.User;
-import com.example.bookstore.services.CheckoutService;
-import com.example.bookstore.services.MailService;
-import com.example.bookstore.services.OrderService;
-import com.example.bookstore.services.UserService;
+import com.example.bookstore.domain.*;
+import com.example.bookstore.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +18,8 @@ public class CheckoutController {
     private OrderService orderService;
     @Autowired
     private  MailService mailService;
+    @Autowired
+    private BookService bookService;
 
     @GetMapping("/checkout")
     public Checkout  getCheckout(@RequestHeader String Authorization){
@@ -43,6 +39,14 @@ public class CheckoutController {
         order.setPhoneNumber(checkoutDto.getPhoneNumber());
         order.setPlaced(true);
         orderService.save(order);
+        for (OrderItem orderitem : order.getBooks()){
+            Book book = bookService.findById(orderitem.getBookId().getId()).get();
+            book.setQuantity(book.getQuantity()-1);
+            if(book.getQuantity()<5){
+                mailService.sendLowStockAlert(book);
+            }
+            bookService.save(book);
+        }
         mailService.sendEmailFromTemplate(user, "email/welcome", "Your Order is confirmed");
         //user.getOrders().stream().filter(o->o.getId().);
       //  userService.save(user);

@@ -1,5 +1,7 @@
 package com.example.bookstore.services;
 
+import com.example.bookstore.domain.Book;
+import com.example.bookstore.domain.BrowsingHistory;
 import com.example.bookstore.domain.OrderItem;
 import com.example.bookstore.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +11,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
@@ -25,6 +28,9 @@ public class MailService {
     private final Logger log = LoggerFactory.getLogger(MailService.class);
     private final SpringTemplateEngine templateEngine;
     private final JavaMailSender javaMailSender;
+    private final BrowsingHistoryService browsingHistoryService;
+    private final UserService userService;
+    private  final BookService bookService;
     private final String BASE_URL = "http://localhost:8080";
     private  final OrderService orderService;
 
@@ -44,6 +50,15 @@ public class MailService {
         } catch (Exception e) {
             log.warn("Email could not be sent to user '{}': {}", to, e.getMessage());
         }
+    }
+
+    @Async
+    public void sendLowStockAlert(Book book){
+        String userEmail = "Admin@example.com"; // Replace with the user's email
+        String subject = "Low stock alert";
+        String text = "You are running out of  "+ book.getName() +" Quantity is : "+book.getQuantity() ;
+
+        sendEmail(userEmail, subject, text,false,true);
     }
 
     @Async
@@ -67,6 +82,26 @@ public class MailService {
             sendEmail(userEmail, subject, text,false,true);
         }
     }
+
+    @Scheduled(fixedRate = 2*60*100000)
+    public void SendBooksBasedOnUserBrowsing(){
+        List<User> users = userService.getAllUsers();
+        for(User user: users) {
+            BrowsingHistory browsingHistory = browsingHistoryService.getBrowsingHistoryByUserId(user);
+            if(browsingHistory != null) {
+                String category = browsingHistory.getMostFrequentCategory();
+                List<Book> books = bookService.getBooksByGenre(category);
+
+                String userEmail = user.getEmail(); // Replace with the user's email
+                String subject = "Recommended Books";
+                String text = "Since you seem to like  "+category+" we recommend you to read these books" + books.toString();
+
+                sendEmail(userEmail, subject, text, false, true);
+            }
+        }
+
+    }
+
     @Async
     public void sendEmailFromTemplate(User user, String templateName, String subject) {
         Locale locale = Locale.ENGLISH;
