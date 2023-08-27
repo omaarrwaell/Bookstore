@@ -20,6 +20,7 @@ import org.thymeleaf.spring5.SpringTemplateEngine;
 import javax.mail.internet.MimeMessage;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -72,7 +73,7 @@ public class MailService {
     }
     @Scheduled(fixedRate = 2 * 60 * 100000) // 2 minutes in milliseconds
     public void sendMostCommonOrderItemEmail() {
-        List<OrderItem> mostCommonOrderItem = orderService.findMostCommonOrderItem();
+        List<Map<String, Object>> mostCommonOrderItem = orderService.findMostCommonOrderItem(1);
 
         if (!mostCommonOrderItem.isEmpty()) {
             String userEmail = "user@example.com"; // Replace with the user's email

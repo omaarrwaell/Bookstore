@@ -22,15 +22,28 @@ public class CheckoutController {
     private BookService bookService;
 
     @GetMapping("/checkout")
-    public Checkout  getCheckout(@RequestHeader String Authorization){
-        User user = userService.getLoggedInUser(Authorization).get();
-        return checkoutService.getCheckout(user.getId());
+    public ResponseEntity<Checkout> getCheckout(@RequestHeader String Authorization) {
+        User user = userService.getLoggedInUser(Authorization).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body(null); // Return appropriate response for unauthenticated user
+        }
+
+        Checkout checkout = checkoutService.getCheckout(user.getId());
+        return ResponseEntity.ok(checkout);
     }
     @PostMapping("/checkout/buy")
-    public ResponseEntity<String> buy(@RequestParam( "id") String id, @RequestBody CheckoutDto checkoutDto, @RequestHeader String Authorization) {
-        User user = userService.getLoggedInUser(Authorization).get();
-       Order order= orderService.getOrderById(id);
-       // Order order = user.getOrders().stream().filter(o->o.getId().equals(id)).findFirst().get();
+    public ResponseEntity<String> buy(@RequestParam("id") String id,
+                                      @RequestBody CheckoutDto checkoutDto,
+                                      @RequestHeader String Authorization) {
+        User user = userService.getLoggedInUser(Authorization).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found"); // Return appropriate response for unauthenticated user
+        }
+
+        Order order = orderService.getOrderById(id);
+        if (order == null) {
+            return ResponseEntity.notFound().build(); // Return appropriate response if order not found
+        }
 
         order.setAddress(checkoutDto.getAddress());
         order.setPrice(order.getTotal());
@@ -39,21 +52,21 @@ public class CheckoutController {
         order.setPhoneNumber(checkoutDto.getPhoneNumber());
         order.setPlaced(true);
         orderService.save(order);
-        for (OrderItem orderitem : order.getBooks()){
-            Book book = bookService.findById(orderitem.getBookId().getId()).get();
-            book.setQuantity(book.getQuantity()-1);
-            if(book.getQuantity()<5){
-                mailService.sendLowStockAlert(book);
+
+        for (OrderItem orderItem : order.getBooks()) {
+            Book book = bookService.findById(orderItem.getBookId().getId()).orElse(null);
+            if (book != null) {
+                book.setQuantity(book.getQuantity() - 1);
+                if (book.getQuantity() < 5) {
+                    mailService.sendLowStockAlert(book);
+                }
+                bookService.save(book);
             }
-            bookService.save(book);
         }
+
         mailService.sendEmailFromTemplate(user, "email/welcome", "Your Order is confirmed");
-        //user.getOrders().stream().filter(o->o.getId().);
-      //  userService.save(user);
 
         return ResponseEntity.ok(order.toString());
-
-
     }
 
 }

@@ -1,7 +1,10 @@
 package com.example.bookstore.services;
 
 import com.example.bookstore.config.JwtTokenUtil;
+import com.example.bookstore.domain.BrowsingHistory;
+import com.example.bookstore.domain.ShoppingCart;
 import com.example.bookstore.domain.User;
+import com.example.bookstore.domain.WishList;
 import com.example.bookstore.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -21,20 +24,39 @@ public class UserService {
     private final RoleService roleService;
 
     private  final JwtTokenUtil jwtTokenUtil;
+    private final ShoppingCartService shoppingCartService;
+    private  final WishListService wishListService;
+    private final BrowsingHistoryService browsingHistoryService;
     @Autowired
-    public UserService(UserRepository userRepository, RoleService roleService, JwtTokenUtil jwtTokenUtil) {
+    public UserService(UserRepository userRepository, RoleService roleService
+            , JwtTokenUtil jwtTokenUtil,ShoppingCartService shoppingCartService,WishListService wishListService,
+                       BrowsingHistoryService browsingHistoryService) {
         this.userRepository = userRepository;
         this.jwtTokenUtil = jwtTokenUtil;
         this.encoder=new BCryptPasswordEncoder();
         this.roleService = roleService;
+        this.shoppingCartService=shoppingCartService;
+        this.wishListService=wishListService;
+        this.browsingHistoryService=browsingHistoryService;
     }
-public User register( User user){
+    public User register( User user){
         String secret = "{bcrypt}"+encoder.encode(user.getPassword());
         user.setPassword(secret);
         user.setRole(roleService.findByName("ROLE_USER"));
-        save(user);
+        User savedUser= save(user);
+        ShoppingCart shoppingCart = new ShoppingCart();
+        shoppingCart.setUserId(savedUser);
+        shoppingCartService.save(shoppingCart);
+        WishList wishList = new WishList();
+        wishList.setUserId(savedUser);
+        wishListService.save(wishList);
+        BrowsingHistory browsingHistory = new BrowsingHistory();
+        browsingHistory.setUserId(savedUser);
+        browsingHistoryService.save(browsingHistory);
+
+
         return user;
-}
+    }
 
 public User save(User user){
         return userRepository.save(user);

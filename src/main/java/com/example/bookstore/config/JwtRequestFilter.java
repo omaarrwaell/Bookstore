@@ -1,6 +1,7 @@
 package com.example.bookstore.config;
 
 import com.example.bookstore.security.UserDetailsServiceImpl;
+import com.example.bookstore.services.TokenBlackListService;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,10 +25,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 
     private JwtTokenUtil jwtTokenUtil;
+
+    private TokenBlackListService tokenBlacklistService;
     @Autowired
-    public JwtRequestFilter(UserDetailsServiceImpl jwtUserDetailsService, JwtTokenUtil jwtTokenUtil) {
+    public JwtRequestFilter(UserDetailsServiceImpl jwtUserDetailsService,
+                            JwtTokenUtil jwtTokenUtil,TokenBlackListService tokenBlacklistService) {
         this.jwtUserDetailsService = jwtUserDetailsService;
         this.jwtTokenUtil = jwtTokenUtil;
+        this.tokenBlacklistService=tokenBlacklistService;
     }
 
     @Override
@@ -61,7 +66,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             // if token is valid configure Spring Security to manually set
             // authentication
-            if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
+            if (jwtTokenUtil.validateToken(jwtToken, userDetails) && !tokenBlacklistService.isTokenBlacklisted(jwtToken)) {
 
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());

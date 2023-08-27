@@ -27,22 +27,27 @@ private OrderService orderService;
     }
 
     @GetMapping("/cart")
-    public ShoppingCart getCart(@RequestHeader String Authorization){
-        User user = userService.getLoggedInUser(Authorization).get();
-        return shoppingCartService.GetByUserId(user.getId());
+    public ResponseEntity<?> getCart(@RequestHeader String Authorization) {
+        User user = userService.getLoggedInUser(Authorization).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("user not authenticated"); // Return appropriate response for unauthenticated user
+        }
+        ShoppingCart cart = shoppingCartService.GetByUserId(user.getId());
+        return ResponseEntity.ok(cart);
     }
 
     @PostMapping("/cart/checkout")
-    public ResponseEntity<String> proceedCheckout(@RequestBody Order order, @RequestHeader String Authorization){
-        User user = userService.getLoggedInUser(Authorization).get();
+    public ResponseEntity<String> proceedCheckout(@RequestBody Order order, @RequestHeader String Authorization) {
+        User user = userService.getLoggedInUser(Authorization).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found"); // Return appropriate response for unauthenticated user
+        }
+
         List<OrderItem> orderItems = shoppingCartService.getOrderItems(shoppingCartService.GetByUserId(user.getId()));
         order.setBooks(orderItems);
         order.setUserId(user);
 
-        order =orderService.save(order);
-       // user.getOrders().add(order);
-      //  userService.save(user);
-        return ResponseEntity.ok("/checkout/buy?id="+order.getId() );
-
+        Order savedOrder = orderService.save(order);
+        return ResponseEntity.ok("/checkout/buy?id=" + savedOrder.getId());
     }
 }

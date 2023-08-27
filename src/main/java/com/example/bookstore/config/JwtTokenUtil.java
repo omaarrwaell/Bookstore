@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.example.bookstore.services.TokenBlackListService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -24,6 +26,20 @@ public class JwtTokenUtil implements Serializable {
     @Value("${jwt.secret}")
     private String secret;
 
+    @Autowired
+    private TokenBlackListService tokenBlacklistService; // Assuming you have this service
+
+    // ... (existing methods)
+
+    // Invalidate a token by adding it to the blacklist
+    public void invalidateToken(String token) {
+        tokenBlacklistService.addToBlacklist(token);
+    }
+
+    // Check if a token is blacklisted
+    public boolean isTokenBlacklisted(String token) {
+        return tokenBlacklistService.isTokenBlacklisted(token);
+    }
     //retrieve username from jwt token
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
@@ -33,6 +49,8 @@ public class JwtTokenUtil implements Serializable {
     public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
     }
+
+
 
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
