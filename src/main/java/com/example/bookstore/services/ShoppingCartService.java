@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ShoppingCartService  {
@@ -42,5 +43,10 @@ public class ShoppingCartService  {
 
     public ShoppingCart GetByUserId(String id) {
     return shoppingCartRepository.findByUserId(id);
+    }
+
+    public ShoppingCart addToCart(Optional<Book> book, ShoppingCart shoppingCart) {
+        shoppingCart.getBooks().add(book.get());
+        return  save(shoppingCart);
     }
 }

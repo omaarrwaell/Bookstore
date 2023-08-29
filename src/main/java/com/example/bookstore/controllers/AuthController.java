@@ -51,6 +51,16 @@ public class AuthController {
         User user = new User();
         return ResponseEntity.ok(user);
 }
+    @PostMapping("/logout")
+    public ResponseEntity<String> logoutUser(@RequestHeader("Authorization") String authorizationHeader) {
+//    String token = jwtUtil.extractTokenFromHeader(authorizationHeader);
+        if(jwtTokenUtil.isTokenBlacklisted(authorizationHeader))
+            return ResponseEntity.badRequest().body("You're not logged in.");
+        jwtTokenUtil.invalidateToken(authorizationHeader);
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok("You've logged out successfully.");
+    }
+
     @PostMapping("/register")
     public ResponseEntity<User> register(@Validated @RequestBody User user, BindingResult bindingResult) {
     if (bindingResult.hasErrors()) {
@@ -61,6 +71,11 @@ public class AuthController {
         User newUser = userService.register(user);
         return ResponseEntity.ok(newUser);
     }
+}
+@GetMapping("/u")
+public ResponseEntity<?> getUser(Authentication authentication){
+        authentication= SecurityContextHolder.getContext().getAuthentication();
+        return ResponseEntity.ok(authentication.getPrincipal());
 }
 
     @GetMapping("/users")
@@ -81,13 +96,13 @@ public class AuthController {
     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(form.getUsernameOrEmail(), form.getPassword());
     Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
     SecurityContextHolder.getContext().setAuthentication(authentication);
-        HttpSession session = request.getSession(true);
+      //  HttpSession session = request.getSession(true);
         UserDetails userDetails = userDetailsService.loadUserByUsername(form.getUsernameOrEmail());
 
 
         final String token = jwtTokenUtil.generateToken(userDetails);
 
-        session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+      //  session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
         mailService.sendWelcomeEmail(userDetails);
 
     return new ResponseEntity<>(token.toString(), HttpStatus.OK);
@@ -104,15 +119,5 @@ public class AuthController {
 //    }
 //
 //}
-@PostMapping("/logout")
-public ResponseEntity<String> logoutUser(@RequestHeader("Authorization") String authorizationHeader) {
-//    String token = jwtUtil.extractTokenFromHeader(authorizationHeader);
-    if(tokenBlackListService.isTokenBlacklisted(authorizationHeader))
-        return ResponseEntity.badRequest().body("You're not logged in.");
-    tokenBlackListService.addToBlacklist(authorizationHeader);
-    SecurityContextHolder.clearContext();
-    return ResponseEntity.ok("You've logged out successfully.");
-}
-
 
 }

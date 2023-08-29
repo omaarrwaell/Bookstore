@@ -89,7 +89,9 @@ public class BookController {
     public ResponseEntity<Book> getBook(
             @PathVariable String name,
             @RequestHeader String Authorization) {
-
+               if(Authorization == ""){
+                   return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+               }
         try {
             User currentUser = userService.getLoggedInUser(Authorization).orElse(null);
             if (currentUser == null) {
@@ -145,8 +147,8 @@ public class BookController {
 
             Optional<Book> book = bookService.findBookByName(name);
             if (book.isPresent()) {
-                shoppingCart.getBooks().add(book.get());
-                shoppingCartService.save(shoppingCart);
+
+                shoppingCartService.addToCart(book,shoppingCart);
                 return ResponseEntity.ok(shoppingCart.toString());
             } else {
                 return ResponseEntity.notFound().build();

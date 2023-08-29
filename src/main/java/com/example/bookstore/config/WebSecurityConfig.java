@@ -68,8 +68,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //    }
 @Override
 protected void configure(HttpSecurity http) throws Exception {
-    http
-            .csrf().disable()
+    http.csrf().disable()
             .cors().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
@@ -79,9 +78,11 @@ protected void configure(HttpSecurity http) throws Exception {
            // .antMatchers("/books/search").permitAll()
             .antMatchers("/login").permitAll()
             .antMatchers("/register").permitAll()
-           // .antMatchers("/admin/**").hasRole("ADMIN")
+            .antMatchers("/logout").permitAll()
+            // .antMatchers("/admin/**").hasRole("ADMIN")
             .anyRequest().authenticated()
             .and()
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+//    http.csrf().disable().authorizeRequests().anyRequest().permitAll().and().httpBasic();
 }
 }
